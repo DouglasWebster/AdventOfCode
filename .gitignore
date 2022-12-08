@@ -1,2 +1,6 @@
-.vscode/settings.json
+**/.vscode
 aoc-env
+build/
+CMakeLists.txt
+**/input.txt
+**/test.txt
