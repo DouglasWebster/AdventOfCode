@@ -3,7 +3,6 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
-#include <set>
 #include <queue>
 #
 
@@ -15,7 +14,7 @@ using Point = std::pair<int, int>;
 
 using LineVector = std::vector<char>;
 using GraphVector = std::vector<LineVector>;
-using PointSet = std::set<Point>;
+using PointVector = std::vector<Point>;
 
 void draw_missing(GraphVector &g)
 {
@@ -52,10 +51,10 @@ void draw_visited(std::vector<std::vector<int>> &visited, GraphVector &g)
     std::cout << '\n';
 }
 
-int get_shortest_path(GraphVector &graph, Point start_pos, Point end_pos, bool record_intermediates, PointSet &intermediates)
+int get_shortest_path(GraphVector &graph, Point start_pos, Point end_pos, bool record_intermediates, PointVector &intermediates)
 {
-    int rows{graph.size()};
-    int columns{graph[0].size()};
+    int rows{int(graph.size())};
+    int columns{int(graph[0].size())};
     std::queue<int> row_queue, column_queue;
 
     int move_count{0};
@@ -70,8 +69,6 @@ int get_shortest_path(GraphVector &graph, Point start_pos, Point end_pos, bool r
         visited(rows, std::vector<int>(columns, 0));
     row_queue.push(start_pos.first);
     column_queue.push(start_pos.second);
-
-    std::set<int> b_moves{};
 
     while (row_queue.size() > 0 && !reached_end)
     {
@@ -102,8 +99,8 @@ int get_shortest_path(GraphVector &graph, Point start_pos, Point end_pos, bool r
             if (step_to > (step_from + 1))
                 continue;
 
-            if (step_from == 'a' && step_to == 'b')
-                b_moves.insert(move_count);
+            if (record_intermediates && step_from == 'a' && step_to == 'b' )
+                intermediates.push_back(Point(current_row, current_column));
 
             row_queue.push(check_row);
             column_queue.push(check_column);
@@ -158,16 +155,6 @@ int main(int, char **)
     Point start_pos;
     Point end_pos;
 
-    // std::queue<int> row_queue, column_queue;
-
-    // int move_count{0};
-    // int nodes_left_in_layer{1};
-    // int nodes_in_next_layer{0};
-    // bool reached_end{false};
-
-    // int direction_vector_row[]{-1, +1, 0, 0};
-    // int direction_vector_col[]{0, 0, +1, -1};
-
     GraphVector graph;
     graph.resize(graphLines.size());
 
@@ -197,77 +184,24 @@ int main(int, char **)
         ++row;
     }
 
-    // draw_missing(graph);
+    PointVector b_moves{};
 
-    // std::vector<std::vector<int>>
-    //     visited(rows, std::vector<int>(columns, 0));
-    // row_queue.push(start_pos.first);
-    // column_queue.push(start_pos.second);
+    int moves_taken = get_shortest_path(graph, start_pos, end_pos, true, b_moves);
+    
+    int min_steps_from_a{moves_taken};
 
-    PointSet b_moves{};
+    for(auto a_start: b_moves) {
+        std::cout << "starting at [" << a_start.first << "," << a_start.second << "] took ";
+        int a_moves_taken = get_shortest_path(graph, a_start, end_pos, false, b_moves);
+        if (a_moves_taken < min_steps_from_a) min_steps_from_a = a_moves_taken;
+        std::cout << a_moves_taken << "moves\n";
 
-    // while (row_queue.size() > 0 && !reached_end)
-    // {
-
-    //     int current_row = row_queue.front();
-    //     row_queue.pop();
-    //     int current_column = column_queue.front();
-    //     column_queue.pop();
-    //     if (current_row == end_pos.first && current_column == end_pos.second)
-    //     // if (graph[current_row][current_column] == 'z' + 1)
-    //     {
-    //         reached_end = true;
-    //         break;
-    //     }
-    //     // explore_neighbours(r, c);
-    //     for (auto index{0}; index < 4; index++)
-    //     {
-    //         int check_row{current_row + direction_vector_row[index]};
-    //         int check_column{current_column + direction_vector_col[index]};
-    //         if (check_row < 0 || check_column < 0)
-    //             continue;
-    //         if (check_row > rows - 1 || check_column > columns - 1)
-    //             continue;
-    //         if (visited[check_row][check_column])
-    //             continue;
-    //         char step_from = graph[current_row][current_column];
-    //         char step_to = graph[check_row][check_column];
-    //         if (step_to > (step_from + 1))
-    //             continue;
-
-    //         if (step_from == 'a' && step_to == 'b')
-    //             b_moves.insert(move_count);
-
-    //         row_queue.push(check_row);
-    //         column_queue.push(check_column);
-
-    //         visited[check_row][check_column] = move_count;
-
-    //         // draw_visited(visited, graph);
-
-    //         nodes_in_next_layer++;
-    //     }
-
-    //     nodes_left_in_layer--;
-    //     if (nodes_left_in_layer == 0)
-    //     {
-    //         nodes_left_in_layer = nodes_in_next_layer;
-    //         nodes_in_next_layer = 0;
-    //         move_count++;
-
-    //         // std::cout << "move: " << move_count << " "
-    //         //           << "\n\n";
-    //     }
-    // }
-
-    // draw_visited(visited, graph);
-
-    int moves_taken = get_shortest_path(graph, start_pos, end_pos, false, b_moves);
+    }
 
     if (moves_taken != -1)
     {
         std::cout << "Moves required from starting position = " << moves_taken << '\n';
-        //     std::cout << "Moves required from closets ground position = " << move_count - *b_moves.end() << '\n';
+        std::cout << "Moves required from closets ground position = " << min_steps_from_a << '\n';
     }
     else
         std::cout << "No solution found.\n";
