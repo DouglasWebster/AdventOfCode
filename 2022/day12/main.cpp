@@ -191,10 +191,10 @@ int main(int, char **)
     int min_steps_from_a{moves_taken};
 
     for(auto a_start: b_moves) {
-        std::cout << "starting at [" << a_start.first << "," << a_start.second << "] took ";
+        // std::cout << "starting at [" << a_start.first << "," << a_start.second << "] took ";
         int a_moves_taken = get_shortest_path(graph, a_start, end_pos, false, b_moves);
         if (a_moves_taken < min_steps_from_a) min_steps_from_a = a_moves_taken;
-        std::cout << a_moves_taken << "moves\n";
+        // std::cout << a_moves_taken << "moves\n";
 
     }
 
