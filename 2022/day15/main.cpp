@@ -3,7 +3,9 @@
 #include <fstream>
 #include <sstream>
 #include <vector>
+#include <iterator>
 #include <map>
+#include <set>
 #include <algorithm>
 
 #include <deque>
@@ -21,10 +23,16 @@ using LineRanges = std::vector<std::pair<int, int>>;
 
 #define TESTING true
 
-bool compare_ranges(std::pair<int, int> first, std::pair<int, int> second) {
+bool compare_ranges(std::pair<int, int> first, std::pair<int, int> second)
+{
     return (first.first < second.first) ? true : false;
-} 
+}
 
+bool compare_beacons(Beacon& lhs, Beacon& rhs) {
+    if(lhs.first < rhs.first ) return true;
+    if(lhs.first == rhs.first && lhs.second < rhs.second) return true;
+    return false;
+}
 
 bool parse_positions(std::string input, Sensors &sensors, Beacons &beacons, RangeMap &sensor_map)
 {
@@ -63,6 +71,8 @@ LineRanges row_coverage(const RangeMap &ranges, int row)
     for (const auto &sensor : ranges)
     {
         int y_distance = abs(sensor.first.second - row);
+        if (y_distance > sensor.second)
+            continue;
         int x_offset = sensor.second - y_distance;
 
         int sensor_min_x = sensor.first.first - x_offset;
@@ -74,17 +84,22 @@ LineRanges row_coverage(const RangeMap &ranges, int row)
     std::sort(coverage.begin(), coverage.end(), compare_ranges);
 
     // merge overlaps
-    bool did_merge{true};
 
-    while(did_merge) {
-        did_merge = false;
-        for (auto index{0}; index < coverage.size() - 1; ++index)
-            if(coverage[index+1 < compare_ranges[index])
+    for (LineRanges::iterator it = coverage.begin();
+         it < coverage.end(); it++)
+    {
+        LineRanges::iterator it_next = it;
+        ++it_next;
+        while (it_next < coverage.end())
+        {
+            if ((*it_next).first > (*it).second)
+                continue;
+            if ((*it_next).second > (*it).second)
+                (*it).second = (*it_next).second;
+            coverage.erase(it_next);
+        }
     }
-
-
     return coverage;
-
 }
 
 int main(int, char **)
@@ -143,7 +158,23 @@ int main(int, char **)
             y_range.second = beacon.second;
     }
 
+    // get a list of covered ranges and sum there coverage;
     LineRanges line_ranges = row_coverage(sensor_ranges, 10);
+
+    int total_covered{0};
+    for (auto range : line_ranges) 
+        total_covered += (range.second - range.first +1);
+
+    // if a beacon is on the line it must also be in a range
+    // so decrease the total covered by the 1
+    bool(*fn_pt)(Beacon, Beacon) = compare_beacons;
+  std::set<Beacod,bool(*)(Beacon, Beacon)> unique_beacons (fn_pt);
+    std::set<Beacon> unique_positions();
+    for(auto beacon : beacons) unique_positions.insert(beacon);
+    for (auto beacon : beacons) {
+        if (beacon.second == 10) total_covered--;
+    }
+
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - time_start);
