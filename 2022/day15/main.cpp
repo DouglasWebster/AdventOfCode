@@ -20,7 +20,7 @@ using MapItem = std::pair<Sensor, int>;
 using RangeMap = std::map<Sensor, int>;
 using LineRanges = std::vector<std::pair<int, int>>;
 
-#define TESTING true
+#define TESTING false
 
 bool compare_ranges(std::pair<int, int> first, std::pair<int, int> second)
 {
@@ -87,7 +87,7 @@ LineRanges row_coverage(const RangeMap &ranges, int row)
                 coverage.erase(it_next);
                 continue;
             }
-            if ((*it_next).first > (*it_current).second)
+            if ((*it_next).first > (*it_current).second + 1)
                 break;
             (*it_current).second = (*it_next).second;
             coverage.erase(it_next);
@@ -159,23 +159,38 @@ int main(int, char **)
 
     int total_monitored{0};
 
-    for(auto line : line_ranges) {
-        total_monitored += (line.second - line.first +1);
+    for (auto line : line_ranges)
+    {
+        total_monitored += (line.second - line.first + 1);
     }
 
-    for(auto beacon: beacons) {
-        if(beacon.second == row) --total_monitored;
-    }
-
-    int max_coord = (TESTING) ? 20 : 4000000;
-
-    for(auto beacon : beacons) {
-        int x_pos = beacon.first;
-        int y_pos = beacon.second;
-        if(x_pos < 0 || x_pos > max_coord || y_pos < 0 || y_pos > max_coord) beacons.erase(beacon);
+    for (auto beacon : beacons)
+    {
+        if (beacon.second == row)
+            --total_monitored;
     }
 
     std::cout << "There are " << total_monitored << " positions which cannot contain a beacon\n";
+
+    int max_coord = (TESTING) ? 20 : 4000000;
+
+    Point distress_beacon{};
+
+    for (int row{0}; row < max_coord; ++row)
+    {
+        line_ranges = row_coverage(sensor_ranges, row);
+        if (line_ranges.size() == 1)
+            if (line_ranges[0].first <= 0 && line_ranges[0].second >= max_coord)
+                continue;
+        distress_beacon = std::make_pair(line_ranges[0].second + 1, row);
+        break;
+    }
+
+    int64_t tuning_frequency = int64_t(distress_beacon.first) * 4000000 + int64_t(distress_beacon.second);
+
+    std::cout << "distress beacon is at "
+              << distress_beacon.first << "," << distress_beacon.second
+              << " and its tuning frequency is " << tuning_frequency << '\n';
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - time_start);
