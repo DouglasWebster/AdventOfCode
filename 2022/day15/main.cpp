@@ -6,6 +6,7 @@
 #include <iterator>
 #include <map>
 #include <set>
+#include <set>
 #include <algorithm>
 
 #include <deque>
@@ -15,23 +16,17 @@
 using Point = std::pair<int, int>;
 using Sensor = Point;
 using Beacon = Point;
-using Beacons = std::vector<Beacon>;
+using Beacons = std::set<Beacon>;
 using Sensors = std::vector<Sensor>;
 using MapItem = std::pair<Sensor, int>;
 using RangeMap = std::map<Sensor, int>;
 using LineRanges = std::vector<std::pair<int, int>>;
 
-#define TESTING true
+#define TESTING false
 
 bool compare_ranges(std::pair<int, int> first, std::pair<int, int> second)
 {
     return (first.first < second.first) ? true : false;
-}
-
-bool compare_beacons(Beacon& lhs, Beacon& rhs) {
-    if(lhs.first < rhs.first ) return true;
-    if(lhs.first == rhs.first && lhs.second < rhs.second) return true;
-    return false;
 }
 
 bool parse_positions(std::string input, Sensors &sensors, Beacons &beacons, RangeMap &sensor_map)
@@ -57,7 +52,7 @@ bool parse_positions(std::string input, Sensors &sensors, Beacons &beacons, Rang
         return true; // duplicate sensors!
 
     sensors.push_back(sensor);
-    beacons.push_back(beacon);
+    beacons.insert(beacon);
     return false;
 }
 
@@ -73,6 +68,8 @@ LineRanges row_coverage(const RangeMap &ranges, int row)
         int y_distance = abs(sensor.first.second - row);
         if (y_distance > sensor.second)
             continue;
+        if (y_distance > sensor.second)
+            continue;
         int x_offset = sensor.second - y_distance;
 
         int sensor_min_x = sensor.first.first - x_offset;
@@ -83,22 +80,24 @@ LineRanges row_coverage(const RangeMap &ranges, int row)
     // sort coverage
     std::sort(coverage.begin(), coverage.end(), compare_ranges);
 
-    // merge overlaps
-
-    for (LineRanges::iterator it = coverage.begin();
-         it < coverage.end(); it++)
+    for (LineRanges::iterator it_current{coverage.begin()}; it_current < coverage.end(); ++it_current)
     {
-        LineRanges::iterator it_next = it;
+        LineRanges::iterator it_next = it_current;
         ++it_next;
         while (it_next < coverage.end())
         {
-            if ((*it_next).first > (*it).second)
+            if ((*it_next).second <= (*it_current).second)
+            {
+                coverage.erase(it_next);
                 continue;
-            if ((*it_next).second > (*it).second)
-                (*it).second = (*it_next).second;
+            }
+            if ((*it_next).first > (*it_current).second + 1)
+                break;
+            (*it_current).second = (*it_next).second;
             coverage.erase(it_next);
         }
     }
+
     return coverage;
 }
 
@@ -158,23 +157,44 @@ int main(int, char **)
             y_range.second = beacon.second;
     }
 
-    // get a list of covered ranges and sum there coverage;
-    LineRanges line_ranges = row_coverage(sensor_ranges, 10);
+    int row = (TESTING) ? 10 : 2000000;
 
-    int total_covered{0};
-    for (auto range : line_ranges) 
-        total_covered += (range.second - range.first +1);
+    LineRanges line_ranges = row_coverage(sensor_ranges, row);
 
-    // if a beacon is on the line it must also be in a range
-    // so decrease the total covered by the 1
-    bool(*fn_pt)(Beacon, Beacon) = compare_beacons;
-  std::set<Beacod,bool(*)(Beacon, Beacon)> unique_beacons (fn_pt);
-    std::set<Beacon> unique_positions();
-    for(auto beacon : beacons) unique_positions.insert(beacon);
-    for (auto beacon : beacons) {
-        if (beacon.second == 10) total_covered--;
+    int total_monitored{0};
+
+    for (auto line : line_ranges)
+    {
+        total_monitored += (line.second - line.first + 1);
     }
 
+    for (auto beacon : beacons)
+    {
+        if (beacon.second == row)
+            --total_monitored;
+    }
+
+    std::cout << "There are " << total_monitored << " positions which cannot contain a beacon\n";
+
+    int max_coord = (TESTING) ? 20 : 4000000;
+
+    Point distress_beacon{};
+
+    for (int row{0}; row < max_coord; ++row)
+    {
+        line_ranges = row_coverage(sensor_ranges, row);
+        if (line_ranges.size() == 1)
+            if (line_ranges[0].first <= 0 && line_ranges[0].second >= max_coord)
+                continue;
+        distress_beacon = std::make_pair(line_ranges[0].second + 1, row);
+        break;
+    }
+
+    int64_t tuning_frequency = int64_t(distress_beacon.first) * 4000000 + int64_t(distress_beacon.second);
+
+    std::cout << "distress beacon is at "
+              << distress_beacon.first << "," << distress_beacon.second
+              << " and its tuning frequency is " << tuning_frequency << '\n';
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end_time - time_start);
