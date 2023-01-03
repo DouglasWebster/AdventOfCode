@@ -1,0 +1,17 @@
+digraph A {
+  rankdir=LR
+size="5,3"
+ratio="fill"
+edge[style="bold"; arrowhead="none"]
+node[shape="circle"]
+AA -> BB[label=1]
+AA -> DD[label=1]
+AA -> II[label=1]
+BB -> CC[label=1]
+CC -> DD[label=1]
+DD -> EE[label=1]
+EE -> FF[label=1]
+FF -> GG[label=1]
+GG -> HH[label=1]
+II -> JJ[label=1]
+}
