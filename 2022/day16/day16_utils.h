@@ -53,6 +53,6 @@ void build_vertices(std::vector<VertexData>& vertices, Valves& valves);
 void draw_graph(const CavernGraph& graph, const Valves& valves);
 void print_distance_matrix(const int D[][V]);
 void print_flowing_distance_matrix(const int D[][V],
-                                   const std::vector<int>& working_valves);
+                                   const std::vector<int>& working_valves, const Valves& valves);
 
 #endif //DSW_DAY16_UTILS_H
