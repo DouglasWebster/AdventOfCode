@@ -80,9 +80,12 @@ void draw_graph(const CavernGraph& graph, const Valves& valves)
     boost::graph_traits<CavernGraph>::edge_iterator ei, ei_end;
     for (boost::tie(ei, ei_end) = boost::edges(graph); ei != ei_end; ++ei)
         fout << "\"" << boost::source(*ei, graph) << ": "
-             << valves[boost::source(*ei, graph)].name << "\" -> \""
+             << valves[boost::source(*ei, graph)].name << "\n"
+             << valves[boost::source(*ei, graph)].flow
+             << "\" -> \""
              << boost::target(*ei, graph) << ": "
-             << valves[boost::target(*ei, graph)].name << "\""
+             << valves[boost::target(*ei, graph)].name << "\n"
+             << valves[boost::target(*ei, graph)].flow << "\""
              << "[label=" << get(boost::edge_weight, graph)[*ei] << "]\n";
 
     fout << "}\n";
@@ -120,15 +123,15 @@ void print_flowing_distance_matrix(const int D[][V],
 
     fout << "       ";
     for (int k = 0; k < V; ++k)
-        if (working_valves[k] || k == 0)
+        if (working_valves[k] || valves[k].name == "AA")
             fout << std::setw(5) << valves[k].name;
     fout << std::endl;
     for (int i = 0; i < V; ++i) {
-        if (!working_valves[i] && i)
+        if (!working_valves[i] && valves[i].name != "AA" )
             continue;
         fout << std::setw(3) << valves[i].name << "(" << std::setw(2) << valves[i].flow << ") -> ";
         for (int j = 0; j < V; ++j) {
-            if (!working_valves[j] && j)
+            if (!working_valves[j] && valves[j].name != "AA")
                 continue;
             if (D[i][j] == (std::numeric_limits<int>::max)())
                 fout << std::setw(5) << "inf";

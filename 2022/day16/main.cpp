@@ -14,57 +14,59 @@ using WorkingValves = std::map<int, int>;
 using LevelMaxFlow = std::pair<int, int>;
 using LevelMaximums = std::vector<LevelMaxFlow>;
 
+static int level {};
 
+#if TESTING
+#define FILE "../figs/test_report.txt"
+#else
+#define FILE "../figs/problem_report.txt"
+#endif
+
+static std::ofstream report(FILE);
 
 int calculate_max_flow(WorkingValves& valves,
     const ValveDistances& distances,
-    LevelMaximums& maximums,
-    int starting_valve = 0,
-    int initial_flow = 0,
+    int current_valve = 0,
     int remaining_time = 30)
 {
-    int max_flow { initial_flow };
-    int this_flow { initial_flow };
-
-    static int level{0};
-
-    WorkingValves::reverse_iterator rit;
-    bool valve_chosen{};
-    for (rit = valves.rbegin(); rit != valves.rend(); ++rit) {
-        int next_valve = rit->second;
-        int travel_time = distances[starting_valve][next_valve];
-        if (!(travel_time < remaining_time))
-            continue; // can't open valve in time, try another
-        int time_for_next_valve = remaining_time - travel_time - 1;
-        int next_flow { time_for_next_valve * rit->first };
-        // remove the next valve from the list to check
-        WorkingValves remaining_valves = valves;
-        remaining_valves.erase(rit->first);
-        level++;
-        int flow {
+    int vented { valves[current_valve] * remaining_time };
+    report << "At valve " << current_valve
+           << " venting " << valves[current_valve] << " for " << remaining_time
+           << "s, vented: " << vented << std::endl;
+    WorkingValves unvisited_valves = valves;
+    unvisited_valves.erase(current_valve);
+    int max_additional_flow { 0 };
+    if (remaining_time < 2)
+        return vented;
+    for (auto valve : unvisited_valves) {
+        int remaining_vent_time = remaining_time - distances[current_valve][valve.first] - 1;
+        if (remaining_vent_time <= 0)
+            continue; // not enough time to open valve
+        int additional_flow {
             calculate_max_flow(
-                remaining_valves, distances, maximums, next_valve, next_flow, time_for_next_valve)
+                unvisited_valves, distances, valve.first, remaining_vent_time)
         };
-        if(flow + this_flow > max_flow) 
-            maximums[level] = LevelMaxFlow(next_valve, flow);
-        flow += this_flow;
-        if (flow > max_flow) {
-            // if (!valve_chosen) {
-            //     visited_valves.push_back(next_valve);
-            //     valve_chosen = true;
-            
-            // } else {
-            //     visited_valves.pop_back();
-            //     visited_valves.push_back(next_valve);
-            // }
-            max_flow = flow;
-        }
-        level--;
-    }
-    // std::cout << "using valve " << starting_valve << ", flow at " << max_flow << " " << std::endl;
 
-    // visited_valves.insert(std::end(visited_valves), std::begin(visiting_valves), std::end(visiting_valves));
-    return max_flow;
+        report << "returned to valve "
+               << current_valve;
+
+        if (additional_flow > max_additional_flow) {
+            max_additional_flow
+                = additional_flow;
+
+            report << " additional venting "
+                   << additional_flow
+                   << " new total "
+                   << max_additional_flow + vented
+                   << std::endl;
+        } else {
+            report << " " << additional_flow << " lower than "
+                   << max_additional_flow << ". Total still "
+                   << max_additional_flow + vented
+                   << std::endl;
+        }
+    }
+    return vented + max_additional_flow;
 }
 
 int main(int, char**)
@@ -72,10 +74,6 @@ int main(int, char**)
     auto time_start = std::chrono::high_resolution_clock::now();
     std::string file_name = (TESTING) ? "../test.txt" : "../input.txt";
     std::ifstream data { file_name };
-
-    // Nodes valves;
-    // Edges valve_neighbours;
-    // ValveTags tags;
 
     Valves valves;
     parse_input(valves);
@@ -91,7 +89,6 @@ int main(int, char**)
         edge_array[index++] = edge;
 
     const std::size_t E = sizeof(edge_array) / sizeof(Edge);
-    // const int V = 10;
 
     CavernGraph cavern(edge_array, edge_array + E, V);
 
@@ -110,16 +107,14 @@ int main(int, char**)
     for (auto valve : valves)
         flow_vertices.push_back(valve.flow);
 
-    // for (int index { 0 }; auto flow : flow_vertices) {
-    //     if (flow > 0)
-    //         std::cout << "Valve " << index << " flow: " << flow << '\n';
-    //     ++index;
-    // }
+    int starting_valve { 0 };
 
     WorkingValves working_valves;
     for (int index { 0 }; auto valve : valves) {
-        if (valve.flow > 0 || index == 0)
-            working_valves.insert(std::make_pair(valve.flow, index));
+        if (valve.flow > 0 || valve.name == "AA")
+            working_valves.insert(std::make_pair(index, valve.flow));
+        if (valve.name == "AA")
+            starting_valve = index;
         ++index;
     }
 
@@ -137,16 +132,16 @@ int main(int, char**)
     // print_flowing_distance_matrix(D, flow_vertices, valves);
     // draw_graph(cavern, valves);
 
-    LevelMaximums level_max_s(15);
+    // LevelMaximums level_max_s(15);
 
-    int max_flow = calculate_max_flow(working_valves, dist_between_working_valves, level_max_s);
+    int max_flow = calculate_max_flow(working_valves, dist_between_working_valves, starting_valve);
 
     std::cout << "max flow: " << max_flow << '\n';
 
-    for (auto level: level_max_s) {
-        if (level.second) 
-            std::cout << "valve " << valves[level.first].name << " vented " << level.second << " gas.\n";
-    }
+    // for (auto level : level_max_s) {
+    //     if (level.second)
+    //         std::cout << "valve " << valves[level.first].name << " vented " << level.second << " gas.\n";
+    // }
 
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(

@@ -15,8 +15,7 @@
 #include <boost/graph/properties.hpp>
 #include <boost/property_map/property_map.hpp>
 
-#define TESTING true
-
+#define TESTING false
 #if TESTING
 #define V 10
 #else
