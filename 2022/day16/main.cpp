@@ -30,9 +30,7 @@ int calculate_max_flow(WorkingValves& valves,
     int remaining_time = 30)
 {
     int vented { valves[current_valve] * remaining_time };
-    report << "At valve " << current_valve
-           << " venting " << valves[current_valve] << " for " << remaining_time
-           << "s, vented: " << vented << std::endl;
+
     WorkingValves unvisited_valves = valves;
     unvisited_valves.erase(current_valve);
     int max_additional_flow { 0 };
@@ -47,24 +45,9 @@ int calculate_max_flow(WorkingValves& valves,
                 unvisited_valves, distances, valve.first, remaining_vent_time)
         };
 
-        report << "returned to valve "
-               << current_valve;
-
-        if (additional_flow > max_additional_flow) {
+        if (additional_flow > max_additional_flow)
             max_additional_flow
                 = additional_flow;
-
-            report << " additional venting "
-                   << additional_flow
-                   << " new total "
-                   << max_additional_flow + vented
-                   << std::endl;
-        } else {
-            report << " " << additional_flow << " lower than "
-                   << max_additional_flow << ". Total still "
-                   << max_additional_flow + vented
-                   << std::endl;
-        }
     }
     return vented + max_additional_flow;
 }
@@ -136,13 +119,49 @@ int main(int, char**)
 
     int max_flow = calculate_max_flow(working_valves, dist_between_working_valves, starting_valve);
 
-    std::cout << "max flow: " << max_flow << '\n';
+    CavernPaths all_paths {};
 
-    // for (auto level : level_max_s) {
-    //     if (level.second)
-    //         std::cout << "valve " << valves[level.first].name << " vented " << level.second << " gas.\n";
-    // }
+    std::vector<int> valves_for_combi {};
+    for (const auto& [key, value] : working_valves) {
+        if (key == starting_valve)
+            continue;
+        valves_for_combi.push_back(key);
+    }
 
+    int no_of_valves { static_cast<int>(valves_for_combi.size()) };
+    bool check[no_of_valves];
+    for (int index { 1 }; index <= no_of_valves; index++)
+        path_combinations(valves_for_combi, index, 0, 0, check, no_of_valves, all_paths);
+
+    int max_combined_flow { 0 };
+
+    std::cout << "There are " << all_paths.size() << " combination of caverns: \n";
+
+    for (int index { 0 }; auto& [key, value] : all_paths) {
+        
+        if (value)
+            continue;
+        WorkingValves path1 {};
+        for (auto cavern : key)
+            path1.insert(std::make_pair(cavern, working_valves[cavern]));
+        path1.insert(std::make_pair(starting_valve, 0));
+        int path1_flow { calculate_max_flow(path1, dist_between_working_valves, starting_valve, 26) };
+        all_paths[key] = path1_flow;
+
+        Path path2_keys = get_alternate_path(valves_for_combi, key);
+        path2_keys.push_back(0);
+        WorkingValves path2;
+        for (auto cavern : path2_keys)
+            path2.insert(std::make_pair(cavern, working_valves[cavern]));
+        int path2_flow { calculate_max_flow(path2, dist_between_working_valves, starting_valve, 26) };
+        all_paths[path2_keys] = path2_flow;
+
+        if (path1_flow + path2_flow > max_combined_flow)
+            max_combined_flow = path1_flow + path2_flow;
+    }
+
+    std::cout << "max flow part 1: " << max_flow << '\n';
+    std::cout << "max flow part 2: " << max_combined_flow << '\n';
     auto end_time = std::chrono::high_resolution_clock::now();
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
         end_time - time_start);

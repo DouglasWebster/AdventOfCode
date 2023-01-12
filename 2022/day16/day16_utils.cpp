@@ -127,7 +127,7 @@ void print_flowing_distance_matrix(const int D[][V],
             fout << std::setw(5) << valves[k].name;
     fout << std::endl;
     for (int i = 0; i < V; ++i) {
-        if (!working_valves[i] && valves[i].name != "AA" )
+        if (!working_valves[i] && valves[i].name != "AA")
             continue;
         fout << std::setw(3) << valves[i].name << "(" << std::setw(2) << valves[i].flow << ") -> ";
         for (int j = 0; j < V; ++j) {
@@ -140,4 +140,50 @@ void print_flowing_distance_matrix(const int D[][V],
         }
         fout << std::endl;
     }
+}
+
+void path_combinations(
+    std::vector<int> valves,
+    int reqLen,
+    int s,
+    int currLen,
+    bool check[],
+    int l,
+    CavernPaths& paths)
+{
+    if (currLen > reqLen)
+        return;
+    else if (currLen == reqLen) {
+        std::vector<int> path;
+        path.reserve(l);
+        for (int i = 0; i < l; i++) {
+            if (check[i] == true)
+                path.push_back(valves[i]);
+        }
+        paths.insert(std::make_pair(path, 0));
+        return;
+    }
+    if (s == l) {
+        return;
+    }
+    check[s] = true;
+    path_combinations(valves, reqLen, s + 1, currLen + 1, check, l, paths);
+    check[s] = false;
+    path_combinations(valves, reqLen, s + 1, currLen, check, l, paths);
+}
+
+Path get_alternate_path(const Path& full_path, const Path& chosen_path)
+{
+    Path alternate_path(full_path.size());
+    Path::iterator it;
+
+    it = std::set_difference(
+            full_path.begin(), 
+            full_path.end(), 
+            chosen_path.begin(), 
+            chosen_path.end(), alternate_path.begin());
+
+    alternate_path.resize(it-alternate_path.begin());
+
+    return alternate_path;
 }
