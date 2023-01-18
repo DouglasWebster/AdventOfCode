@@ -8,7 +8,7 @@
 
 #include "day17_helpers.h"
 
-#define TESTING true
+#define TESTING false
 
 using Column = std::vector<char>;
 using Chamber = std::vector<Column>;
@@ -60,7 +60,8 @@ bool check_drop(const Chamber& chamber, int row)
 {
 
     for (auto col : chamber) {
-        if (col[row] == '@' && col[row - 1] != ' ')
+        // require final check for second row of cross shape
+        if (col[row] == '@' && col[row - 1] != ' ' && col[row - 1] != '@')
             return false;
     }
     return true;
@@ -68,7 +69,7 @@ bool check_drop(const Chamber& chamber, int row)
 
 /// @brief scans the tower from the current line and either drops the item or marks it as at rest
 /// @param chamber
-/// @param drop_or_mark
+/// @param drop_or_mark true if the items is to be dropped one row.
 /// @param current_line
 void drop_item(Chamber& chamber, bool drop_or_mark, int current_line)
 {
@@ -216,6 +217,8 @@ bool drop_cross(Chamber& chamber, char jet, int& current_line)
     }
 
     bool can_drop { check_drop(chamber, current_line) };
+    if (can_drop)
+        can_drop = check_drop(chamber, current_line + 1);
 
     drop_item(chamber, can_drop, current_line);
 
@@ -263,11 +266,11 @@ bool drop_backward_l(Chamber& chamber, char jet, int& current_line)
     }
 
     col_current += (jet == '<') ? 0 : 2;
-
+    
     if (jet == '<' && col_current != chamber.begin()) {
         Chamber::iterator col_previous = col_current - 1;
         if ((*col_previous)[current_line] == ' ' && (*(col_previous + 2))[current_line + 1] == ' '
-            && (*(col_previous + 2))[current_line + 1] == ' ') {
+            && (*(col_previous + 2))[current_line + 2] == ' ') {
             (*col_previous++)[current_line] = '@';
             (*col_previous++)[current_line] = '@';
             (*col_previous).erase((*col_previous).begin() + current_line, (*col_previous).begin() + current_line + 3);
@@ -293,8 +296,9 @@ bool drop_backward_l(Chamber& chamber, char jet, int& current_line)
 
     drop_item(chamber, can_drop, current_line);
 
+
     // dsw_aoc_day17::draw_chimney(chamber);
-    // reset the current line to the top of the cross.
+    // reset the current line to the top of the _l.
     current_line += (can_drop) ? 1 : 2;
 
     return can_drop;
@@ -339,10 +343,10 @@ bool drop_tower(Chamber& chamber, char jet, int& current_line)
             && (*(col_previous))[current_line + 1] == ' '
             && (*(col_previous))[current_line + 2] == ' '
             && (*(col_previous))[current_line + 3] == ' ') {
-            (*col_previous).erase((*col_previous).begin() + current_line, (*col_previous).begin() + current_line + 4);
-            (*col_previous).insert((*col_previous++).begin() + current_line, { '@', '@', '@', '@' });
-            (*col_previous).erase((*col_previous).begin() + current_line, (*col_previous).begin() + current_line + 4);
-            (*col_previous).insert((*col_previous).begin() + current_line, { ' ', ' ', ' ', ' ' });
+            for (int offset { 0 }; offset < 4; ++offset) {
+                (*col_previous)[current_line + offset] = '@';
+                (*col_current)[current_line + offset] = ' ';
+            }
         }
     }
     if (jet == '>' && col_current < chamber.end() - 1) {
@@ -351,10 +355,10 @@ bool drop_tower(Chamber& chamber, char jet, int& current_line)
             && (*col_next)[current_line + 1] == ' '
             && (*col_next)[current_line + 2] == ' '
             && (*col_next)[current_line + 3] == ' ') {
-            (*col_next).erase((*col_next).begin() + current_line, (*col_next).begin() + current_line + 4);
-            (*col_next).insert((*col_next--).begin() + current_line, { '@', '@', '@', '@' });
-            (*col_next).erase((*col_next).begin() + current_line, (*col_next).begin() + current_line + 4);
-            (*col_next).insert((*col_next).begin() + current_line, { ' ', ' ', ' ', ' ' });
+            for (int offset { 0 }; offset < 4; ++offset) {
+                (*col_next)[current_line + offset] = '@';
+                (*col_current)[current_line + offset] = ' ';
+            }
         }
     }
 
@@ -402,6 +406,8 @@ bool drop_square(Chamber& chamber, char jet, int& current_line)
         col_current++;
     }
 
+    col_current += (jet == '<') ? 0 : 1;
+
     if (jet == '<' && col_current != chamber.begin()) {
         Chamber::iterator col_previous = col_current - 1;
         if ((*col_previous)[current_line] == ' ' && (*(col_previous))[current_line + 1] == ' ') {
@@ -413,7 +419,7 @@ bool drop_square(Chamber& chamber, char jet, int& current_line)
         }
     }
     if (jet == '>' && col_current < chamber.end() - 1) {
-        Chamber::iterator col_next = col_current + 2;
+        Chamber::iterator col_next = col_current + 1;
         if ((*col_next)[current_line] == ' ' && (*col_next)[current_line + 1] == ' ') {
             (*col_next).erase((*col_next).begin() + current_line, (*col_next).begin() + current_line + 2);
             (*col_next).insert((*col_next--).begin() + current_line, { '@', '@' });
@@ -471,32 +477,75 @@ int main(int, char**)
     for (auto col : chamber)
         col.reserve(10000);
 
+    int rocks_fallen { 0 };
 
+    while (rocks_fallen < 504) {
+        int chamber_row { 0 };
+        char jet;
+        switch (rocks_fallen % 5) {
+        case 0:
+            chamber_row = add_line(chamber);
+            jet = rotate_jets(jets);
+            if(rocks_fallen > 500) std::cout << "jet is " << jet << '\n';
+            while (drop_line(chamber, jet, chamber_row)) {
+                if(rocks_fallen > 500) std::cout << "jet is " << jet << '\n';
+                jet = rotate_jets(jets);
+            }
+            break;
 
-    int chimney_row { add_line(chamber) };
-    char jet { rotate_jets(jets) };
-    while (drop_line(chamber, jet, chimney_row))
-        jet = rotate_jets(jets);
-    chimney_row = add_cross(chamber);
-    jet = rotate_jets(jets);
-    while (drop_cross(chamber, jet, chimney_row))
-        jet = rotate_jets(jets);
-    chimney_row = add_backward_l(chamber);
-    jet = rotate_jets(jets);
-    while (drop_backward_l(chamber, jet, chimney_row))
-        jet = rotate_jets(jets);
-    chimney_row = add_tower(chamber);
-    jet = rotate_jets(jets);
-    while (drop_tower(chamber, jet, chimney_row))
-        jet = rotate_jets(jets);
-    chimney_row = add_square(chamber);
-    jet = rotate_jets(jets);
-    while (drop_square(chamber, jet, chimney_row)) 
-        jet = rotate_jets(jets);
+        case 1:
+            chamber_row = add_cross(chamber);
+            jet = rotate_jets(jets);
+            if(rocks_fallen > 500) std::cout << "jet is " << jet << '\n';
+            while (drop_cross(chamber, jet, chamber_row)){
+                if(rocks_fallen > 500) std::cout << "jet is " << jet << '\n';
+                jet = rotate_jets(jets);
+            }
+            break;
+
+        case 2:
+            chamber_row = add_backward_l(chamber);
+            jet = rotate_jets(jets);
+            if(rocks_fallen > 500) std::cout << "jet is " << jet << '\n';
+            while (drop_backward_l(chamber, jet, chamber_row)){
+                if(rocks_fallen > 500) std::cout << "jet is " << jet << '\n';
+                jet = rotate_jets(jets);
+            }
+            break;
+
+        case 3:
+            chamber_row = add_tower(chamber);
+            jet = rotate_jets(jets);
+            if(rocks_fallen > 500) std::cout << "jet is " << jet << '\n';
+            while (drop_tower(chamber, jet, chamber_row)){
+                if(rocks_fallen > 500) std::cout << "jet is " << jet << '\n';
+                jet = rotate_jets(jets);
+            }
+            break;
+
+        case 4:
+            chamber_row = add_square(chamber);
+            jet = rotate_jets(jets);
+            if(rocks_fallen > 500) std::cout << "jet is " << jet << '\n';
+            while (drop_square(chamber, jet, chamber_row)){
+                if(rocks_fallen > 500) std::cout << "jet is " << jet << '\n';
+                jet = rotate_jets(jets);
+            }
+            break;
+
+        default:
+            break;
+        }
+
+        clear_top(chamber);
+        ++rocks_fallen;
+        std::cout << "after " << rocks_fallen << " have fallen the column is " << chamber[0].size() << " rows high\n";
+    }
 
     clear_top(chamber);
-    dsw_aoc_day17::draw_chimney(chamber);
-    std::cout << "Height of the tower of rocks is " << chamber[0].size() << " units tall.\n";
+    std::cout << '\n';
+    // dsw_aoc_day17::draw_chimney(chamber);
+    std::cout << "Height of the tower of rocks is " << chamber[0].size() - 1 << " units tall.\n";
 
     std::cout << "Time taken by program: " << duration.count() << " microseconds"
               << "\n";
