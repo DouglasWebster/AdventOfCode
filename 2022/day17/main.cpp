@@ -185,7 +185,7 @@ bool drop_cross(Chamber& chamber, char jet, int& current_line)
     }
 
     col_current += (jet == '<') ? -1 : 1;
-    
+
     if (jet == '<' && col_current != chamber.begin()) {
 
         Chamber::iterator col_previous = col_current - 1;
@@ -197,7 +197,7 @@ bool drop_cross(Chamber& chamber, char jet, int& current_line)
             (*col_previous).insert((*col_previous++).begin() + current_line, { '@', '@', '@' });
             (*col_previous).erase((*col_previous).begin() + current_line, (*col_previous).begin() + current_line + 3);
             (*col_previous).insert((*col_previous++).begin() + current_line, { ' ', '@', ' ' });
-            (*col_previous)[current_line+1] = ' ';
+            (*col_previous)[current_line + 1] = ' ';
         }
     }
     if (jet == '>' && col_current < chamber.end() - 1) {
@@ -210,8 +210,7 @@ bool drop_cross(Chamber& chamber, char jet, int& current_line)
             (*col_next).insert((*col_next--).begin() + current_line, { '@', '@', '@' });
             (*col_next).erase((*col_next).begin() + current_line, (*col_next).begin() + current_line + 3);
             (*col_next).insert((*col_next--).begin() + current_line, { ' ', '@', ' ' });
-            (*col_next).erase((*col_next).begin() + current_line, (*col_next).begin() + current_line + 3);
-            (*col_next).insert((*col_next).begin() + current_line, { ' ', ' ', ' ' });
+            (*col_next)[current_line + 1] = ' ';
         }
     }
 
@@ -479,7 +478,11 @@ int main(int, char**)
     bool rock_can_fall = false;
     int rock { 0 };
     int chamber_row { 0 };
-    int rocks_required { 2022 };
+    int rocks_required { 40022 };
+    int jets_fired(0);
+    int repeat_length { 0 };
+    int discarded_length { 0 };
+    
 
     while (rocks_fallen < rocks_required) {
         if (!rock_can_fall) {
@@ -506,6 +509,7 @@ int main(int, char**)
         }
         while (rock_can_fall) {
             char jet { rotate_jets(jets) };
+            jets_fired++;
             if (rock_can_fall) {
                 switch (rock) {
                 case 0:
@@ -527,17 +531,32 @@ int main(int, char**)
                 default:
                     break;
                 }
-                if (!rock_can_fall)
+                if (!rock_can_fall) {
+                    // is initial rock at rest when we restart jet sequence;
+                    if (!repeat_length && !rock && !(jets_fired % jets.size())) {
+                        clear_top(chamber);
+                        if (chamber_row == chamber[0].size()-1) // we have a repeat
+                            repeat_length = chamber_row;
+                    }
                     rock = ++rock % 5;
+                    if (chamber_row > 9900) {
+                        chamber_row -= 9800;
+                        discarded_length += 9800;
+                        for (auto& col : chamber) {
+                            col.erase(col.begin(), col.begin() + 9800);
+                        }
+                    }
+                }
             }
         }
     }
 
     clear_top(chamber);
-    std::cout << '\n';
-    dsw_aoc_day17::draw_chimney(chamber, 15);
-    std::cout << "next rock " << rock << '\n';
-    std::cout << "Height of the tower of rocks is " << chamber[0].size() - 1 << " units tall.\n";
+    // std::cout << '\n';
+    // dsw_aoc_day17::draw_chimney(chamber);
+    // std::cout << "next rock " << rock << '\n';
+    std::cout << "Repeat length " << repeat_length << '\n';
+    std::cout << "Part 1; Height of the tower of rocks is " << chamber[0].size() - 1 + discarded_length << " units tall.\n";
 
     std::cout << "Time taken by program: " << duration.count() << " microseconds"
               << "\n";
