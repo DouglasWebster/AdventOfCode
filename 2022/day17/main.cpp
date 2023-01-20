@@ -3,6 +3,7 @@
 #include <deque>
 #include <fstream>
 #include <iostream>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -19,6 +20,13 @@ using Jets = std::deque<char>;
 #else
 #define FILE "../input.txt"
 #endif
+
+struct RepeatRow {
+    int chamber_height { 0 };
+    int total_rocks_fallen { 0 };
+    int repeat_rocks_fallen { 0 };
+    std::string contents { "" };
+};
 
 inline char rotate_jets(Jets& jets)
 {
@@ -437,54 +445,17 @@ bool drop_square(Chamber& chamber, char jet, int& current_line)
     return can_drop;
 }
 
-int main(int, char**)
+int rock_fall_height(Chamber& chamber, int rocks_required, int rock, Jets& jets, RepeatRow& first_repeat)
 {
-    auto time_start = std::chrono::high_resolution_clock::now();
-    std::ifstream data { FILE };
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
-        end_time - time_start);
-
-    Jets jets {};
-
-    if (!data) {
-        std::cerr << FILE << " could not be opened for reading\n ";
-        return 1;
-    }
-
-    while (data && !data.eof()) {
-        char jet = data.get();
-        if (jet == -1)
-            break;
-        jets.push_back(jet);
-    }
-
-    Chamber chamber {
-        { '-' },
-        { '-' },
-        { '-' },
-        { '-' },
-        { '-' },
-        { '-' },
-        { '-' }
-
-    };
-
-    // dont slow it down by constant resizing of the vectors (probably overkill)
-    for (auto col : chamber)
-        col.reserve(10000);
-
     int rocks_fallen { 0 };
-    bool rock_can_fall = false;
-    int rock { 0 };
+    bool repeat_found { false };
+    bool rock_can_fall { false };
     int chamber_row { 0 };
-    int rocks_required { 40022 };
-    int jets_fired(0);
-    int repeat_length { 0 };
-    int discarded_length { 0 };
-    
+    int jets_fired { 0 };
 
-    while (rocks_fallen < rocks_required) {
+    std::map<int, RepeatRow> repeated_rows;
+
+    while (rocks_fallen < rocks_required && !repeat_found) {
         if (!rock_can_fall) {
             clear_top(chamber);
             switch (rock) {
@@ -532,31 +503,121 @@ int main(int, char**)
                     break;
                 }
                 if (!rock_can_fall) {
-                    // is initial rock at rest when we restart jet sequence;
-                    if (!repeat_length && !rock && !(jets_fired % jets.size())) {
-                        clear_top(chamber);
-                        if (chamber_row == chamber[0].size()-1) // we have a repeat
-                            repeat_length = chamber_row;
-                    }
-                    rock = ++rock % 5;
-                    if (chamber_row > 9900) {
-                        chamber_row -= 9800;
-                        discarded_length += 9800;
-                        for (auto& col : chamber) {
-                            col.erase(col.begin(), col.begin() + 9800);
+                    clear_top(chamber);
+                    if (!rock) {
+                        if (chamber_row == chamber[0].size() - 1) { // we have a repeat
+                            RepeatRow row_status { chamber_row, rocks_fallen, rocks_fallen, "" };
+                            for (auto col : chamber)
+                                row_status.contents.push_back(col.back());
+                            std::pair<std::map<int, RepeatRow>::iterator, bool> exists;
+
+                            exists = repeated_rows.insert(std::pair<int, RepeatRow>(jets_fired % jets.size(), row_status));
+                            if (!exists.second) { // we have a match on the index, is the row the same?
+                                if (exists.first->second.contents == row_status.contents) {
+                                    first_repeat = exists.first->second;
+                                    first_repeat.total_rocks_fallen = rocks_fallen;
+                                    repeat_found = true;
+                                    break;
+                                };
+                            }
                         }
                     }
+
+                    rock = ++rock % 5;
                 }
             }
         }
     }
+    clear_top(chamber);
+    // dsw_aoc_day17::draw_chimney(chamber);
+    return static_cast<int>(chamber[0].size());
+}
 
+/// @brief
+/// @param
+/// @param
+/// @return
+int main(int, char**)
+{
+    auto time_start = std::chrono::high_resolution_clock::now();
+    std::ifstream data { FILE };
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+        end_time - time_start);
+
+    Jets jets {};
+
+    if (!data) {
+        std::cerr << FILE << " could not be opened for reading\n ";
+        return 1;
+    }
+
+    while (data && !data.eof()) {
+        char jet = data.get();
+        if (jet == -1)
+            break;
+        jets.push_back(jet);
+    }
+
+    Chamber chamber {
+        { '-' },
+        { '-' },
+        { '-' },
+        { '-' },
+        { '-' },
+        { '-' },
+        { '-' }
+
+    };
+
+    // dont slow it down by constant resizing of the vectors (probably overkill)
+    for (auto col : chamber)
+        col.reserve(20000);
+
+    int rocks_fallen { 0 };
+    bool rock_can_fall = false;
+    int rock { 0 };
+    int chamber_row { 0 };
+    int rocks_required { 2022 };
+    int jets_fired(0);
+    int repeat_length { 0 };
+    int discarded_length { 0 };
+    RepeatRow first_repeat {};
+    bool repeat_found { false };
+    std::map<int, RepeatRow> line_at_rest;
+ 
+    int chamber_height { rock_fall_height(chamber, rocks_required, rock, jets, first_repeat) };
     clear_top(chamber);
     // std::cout << '\n';
     // dsw_aoc_day17::draw_chimney(chamber);
     // std::cout << "next rock " << rock << '\n';
-    std::cout << "Repeat length " << repeat_length << '\n';
-    std::cout << "Part 1; Height of the tower of rocks is " << chamber[0].size() - 1 + discarded_length << " units tall.\n";
+    int_fast64_t chamber_height_at_repeat_start { first_repeat.chamber_height };
+    int_fast64_t repeated_height { chamber_height - chamber_height_at_repeat_start - 1 };
+    int_fast64_t rocks_fallen_at_repeat_start { first_repeat.repeat_rocks_fallen };
+    int_fast64_t rocks_fallen_in_repeat { first_repeat.total_rocks_fallen - rocks_fallen_at_repeat_start };
+    int_fast64_t repeat_count { (rocks_required - rocks_fallen_at_repeat_start) / rocks_fallen_in_repeat };
+    int_fast64_t rocks_left_to_fall { (rocks_required - rocks_fallen_at_repeat_start) % rocks_fallen_in_repeat };
+    int_fast64_t chamber_height_at_end_of_repeat_sequence { chamber_height_at_repeat_start + repeated_height * repeat_count };
+    // discard all but the top 10 rows of the chamber; we don't want a rock not falling far enough!
+    for (auto& col : chamber)
+        col.erase(col.begin(), col.end()-10);
+    
+    Chamber part1_finish_chamber = chamber;
+    Chamber part2_finish_chamber = chamber;
+    Jets part1_jets {jets};
+    Jets part2_jets = jets;
+
+    // solution to part 1
+    int_fast64_t remaining_height { rock_fall_height(part1_finish_chamber, rocks_left_to_fall, rock + 1, part1_jets, first_repeat) - 10};
+    std::cout << "Part 1; Height of the tower of rocks is " << chamber_height_at_end_of_repeat_sequence + remaining_height << " units tall.\n";
+
+    // solution to part 2
+    int_fast32_t part2_rocks_required{1000000000000};
+    repeat_count = (part2_rocks_required - rocks_fallen_at_repeat_start) / rocks_fallen_in_repeat;
+    chamber_height_at_end_of_repeat_sequence = chamber_height_at_repeat_start + repeated_height * repeat_count;
+    rocks_left_to_fall  = (part2_rocks_required - rocks_fallen_at_repeat_start) % rocks_fallen_in_repeat;
+    remaining_height  = rock_fall_height(part1_finish_chamber, rocks_left_to_fall, rock + 1, part2_jets, first_repeat) - 10;
+    std::cout << "Part 2; Height of the tower of rocks is " << chamber_height_at_end_of_repeat_sequence + remaining_height << " units tall.\n";
 
     std::cout << "Time taken by program: " << duration.count() << " microseconds"
               << "\n";
