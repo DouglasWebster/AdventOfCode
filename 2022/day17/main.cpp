@@ -9,11 +9,11 @@
 
 #include "day17_helpers.h"
 
-#define TESTING false
+#define TESTING true
 
+/// @brief 
 using Column = std::vector<char>;
 using Chamber = std::vector<Column>;
-using Jets = std::deque<char>;
 
 #if TESTING
 #define FILE "../test.txt"
@@ -21,20 +21,15 @@ using Jets = std::deque<char>;
 #define FILE "../input.txt"
 #endif
 
+/// @brief Record the state of the top of the chamber when a 
+/// @brief row of @@@@ is at the top of the chamber
 struct RepeatRow {
     int chamber_height { 0 };
     int total_rocks_fallen { 0 };
     int repeat_rocks_fallen { 0 };
     std::string contents { "" };
+    Chamber chamber {}; // record enough items so that anything falling must come to rest,
 };
-
-inline char rotate_jets(Jets& jets)
-{
-    char jet = jets.front();
-    jets.pop_front();
-    jets.push_back(jet);
-    return jet;
-}
 
 /// @brief clear all superfluous voids above the top of the uppermost rock
 /// @param chamber the chimney under consideration
@@ -445,13 +440,14 @@ bool drop_square(Chamber& chamber, char jet, int& current_line)
     return can_drop;
 }
 
-int rock_fall_height(Chamber& chamber, int rocks_required, int rock, Jets& jets, RepeatRow& first_repeat)
+int rock_fall_height(Chamber& chamber, int rocks_required, int rock, const std::string& jets, int& jet_index, RepeatRow& first_repeat)
 {
     int rocks_fallen { 0 };
     bool repeat_found { false };
     bool rock_can_fall { false };
     int chamber_row { 0 };
     int jets_fired { 0 };
+    
 
     std::map<int, RepeatRow> repeated_rows;
 
@@ -479,7 +475,9 @@ int rock_fall_height(Chamber& chamber, int rocks_required, int rock, Jets& jets,
             rock_can_fall = true;
         }
         while (rock_can_fall) {
-            char jet { rotate_jets(jets) };
+            char jet {jets[jet_index++]};
+            if(jet_index > jets.length() -1)
+                jet_index = 0;
             jets_fired++;
             if (rock_can_fall) {
                 switch (rock) {
@@ -545,7 +543,7 @@ int main(int, char**)
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
         end_time - time_start);
 
-    Jets jets {};
+    std::string jets{};
 
     if (!data) {
         std::cerr << FILE << " could not be opened for reading\n ";
@@ -553,11 +551,10 @@ int main(int, char**)
     }
 
     while (data && !data.eof()) {
-        char jet = data.get();
-        if (jet == -1)
-            break;
-        jets.push_back(jet);
+        std::getline(data, jets);
     }
+
+    int jet_index{0};
 
     Chamber chamber {
         { '-' },
@@ -586,7 +583,7 @@ int main(int, char**)
     bool repeat_found { false };
     std::map<int, RepeatRow> line_at_rest;
  
-    int chamber_height { rock_fall_height(chamber, rocks_required, rock, jets, first_repeat) };
+    int chamber_height { rock_fall_height(chamber, rocks_required, rock, jets, jet_index, first_repeat) };
     clear_top(chamber);
     // std::cout << '\n';
     // dsw_aoc_day17::draw_chimney(chamber);
@@ -600,15 +597,15 @@ int main(int, char**)
     int_fast64_t chamber_height_at_end_of_repeat_sequence { chamber_height_at_repeat_start + repeated_height * repeat_count };
     // discard all but the top 10 rows of the chamber; we don't want a rock not falling far enough!
     for (auto& col : chamber)
-        col.erase(col.begin(), col.end()-10);
+        col.erase(col.begin(), col.end()- 60);
     
     Chamber part1_finish_chamber = chamber;
     Chamber part2_finish_chamber = chamber;
-    Jets part1_jets {jets};
-    Jets part2_jets = jets;
+    int part_1_end_jet_index = jet_index;
+    int part_2_end_jet_index = jet_index;
 
     // solution to part 1
-    int_fast64_t remaining_height { rock_fall_height(part1_finish_chamber, rocks_left_to_fall, rock + 1, part1_jets, first_repeat) - 10};
+    int_fast64_t remaining_height { rock_fall_height(part1_finish_chamber, rocks_left_to_fall, rock + 1, jets, part_1_end_jet_index, first_repeat) - 60};
     std::cout << "Part 1; Height of the tower of rocks is " << chamber_height_at_end_of_repeat_sequence + remaining_height << " units tall.\n";
 
     // solution to part 2
@@ -616,7 +613,7 @@ int main(int, char**)
     repeat_count = (part2_rocks_required - rocks_fallen_at_repeat_start) / rocks_fallen_in_repeat;
     chamber_height_at_end_of_repeat_sequence = chamber_height_at_repeat_start + repeated_height * repeat_count;
     rocks_left_to_fall  = (part2_rocks_required - rocks_fallen_at_repeat_start) % rocks_fallen_in_repeat;
-    remaining_height  = rock_fall_height(part1_finish_chamber, rocks_left_to_fall, rock + 1, part2_jets, first_repeat) - 10;
+    remaining_height  = rock_fall_height(part1_finish_chamber, rocks_left_to_fall, rock + 1, jets, part_2_end_jet_index, first_repeat) - 60;
     std::cout << "Part 2; Height of the tower of rocks is " << chamber_height_at_end_of_repeat_sequence + remaining_height << " units tall.\n";
 
     std::cout << "Time taken by program: " << duration.count() << " microseconds"
