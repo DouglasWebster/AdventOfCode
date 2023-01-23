@@ -9,9 +9,9 @@
 
 #include "day17_helpers.h"
 
-#define TESTING true
+#define TESTING false
 
-/// @brief 
+/// @brief
 using Column = std::vector<char>;
 using Chamber = std::vector<Column>;
 
@@ -21,14 +21,13 @@ using Chamber = std::vector<Column>;
 #define FILE "../input.txt"
 #endif
 
-/// @brief Record the state of the top of the chamber when a 
-/// @brief row of @@@@ is at the top of the chamber
+/// @brief Record the state of the top of the chamber when a
+/// @brief row of @@@@@@@@ is at the top of the chamber
 struct RepeatRow {
-    int chamber_height { 0 };
-    int total_rocks_fallen { 0 };
-    int repeat_rocks_fallen { 0 };
-    std::string contents { "" };
-    Chamber chamber {}; // record enough items so that anything falling must come to rest,
+    int_fast64_t chamber_height { 0 };
+    int_fast64_t total_rocks_fallen { 0 };
+    int_fast64_t repeat_rocks_fallen { 0 };
+    Chamber chamber { {}, {}, {}, {}, {}, {}, {} }; // record enough items so that anything falling must come to rest,
 };
 
 /// @brief clear all superfluous voids above the top of the uppermost rock
@@ -74,10 +73,10 @@ bool check_drop(const Chamber& chamber, int row)
 /// @param chamber
 /// @param drop_or_mark true if the items is to be dropped one row.
 /// @param current_line
-void drop_item(Chamber& chamber, bool drop_or_mark, int current_line)
+void drop_item(Chamber& chamber, bool drop_or_mark, int_fast64_t current_line, int rows)
 {
     for (auto& col : chamber) {
-        for (int line_to_check { current_line }; line_to_check < current_line + 4; ++line_to_check)
+        for (int_fast64_t line_to_check { current_line }; line_to_check < current_line + rows; ++line_to_check)
             if (col[line_to_check] == '@') {
                 if (drop_or_mark) {
                     col[line_to_check] = ' ';
@@ -102,7 +101,6 @@ int add_line(Chamber& chamber)
             col.push_back(' ');
         index++;
     }
-    // dsw_aoc_day17::draw_chimney(chamber);
     return chamber[0].size() - 1;
 }
 
@@ -111,7 +109,7 @@ int add_line(Chamber& chamber)
 /// @param jet
 /// @param current_line
 /// @return the current row the line is at.
-bool drop_line(Chamber& chamber, char jet, int& current_line)
+bool drop_line(Chamber& chamber, char jet, int_fast64_t& current_line)
 {
     Chamber::iterator col_current = chamber.begin();
 
@@ -142,12 +140,10 @@ bool drop_line(Chamber& chamber, char jet, int& current_line)
 
     bool can_drop { check_drop(chamber, current_line) };
 
-    drop_item(chamber, can_drop, current_line);
+    drop_item(chamber, can_drop, current_line, 1);
 
     if (can_drop)
         current_line--;
-
-    // dsw_aoc_day17::draw_chimney(chamber);
     return can_drop;
 }
 
@@ -167,7 +163,6 @@ int add_cross(Chamber& chamber)
             col.insert(col.end(), { ' ', ' ', ' ' });
         index++;
     }
-    // dsw_aoc_day17::draw_chimney(chamber);
     return chamber[0].size() - 1;
 }
 
@@ -176,7 +171,7 @@ int add_cross(Chamber& chamber)
 /// @param jet
 /// @param current_line
 /// @return the row that the top of the cross is on
-bool drop_cross(Chamber& chamber, char jet, int& current_line)
+bool drop_cross(Chamber& chamber, char jet, int_fast64_t& current_line)
 {
     current_line -= 2; // we want the base, not the top.
 
@@ -221,10 +216,7 @@ bool drop_cross(Chamber& chamber, char jet, int& current_line)
     if (can_drop)
         can_drop = check_drop(chamber, current_line + 1);
 
-    drop_item(chamber, can_drop, current_line);
-
-    // dsw_aoc_day17::draw_chimney(chamber);
-    // reset the current line to the top of the cross.
+    drop_item(chamber, can_drop, current_line, 3);
     current_line += (can_drop) ? 1 : 2;
 
     return can_drop;
@@ -246,7 +238,6 @@ int add_backward_l(Chamber& chamber)
             col.insert(col.end(), { ' ', ' ', ' ' });
         index++;
     }
-    // dsw_aoc_day17::draw_chimney(chamber);
     return chamber[0].size() - 1;
 }
 
@@ -255,7 +246,7 @@ int add_backward_l(Chamber& chamber)
 /// @param jet
 /// @param current_line
 /// @return the row that the top of the cross is on
-bool drop_backward_l(Chamber& chamber, char jet, int& current_line)
+bool drop_backward_l(Chamber& chamber, char jet, int_fast64_t& current_line)
 {
     current_line -= 2; // we want the base, not the top.
 
@@ -294,11 +285,8 @@ bool drop_backward_l(Chamber& chamber, char jet, int& current_line)
     }
 
     bool can_drop { check_drop(chamber, current_line) };
+    drop_item(chamber, can_drop, current_line, 3);
 
-    drop_item(chamber, can_drop, current_line);
-
-    // dsw_aoc_day17::draw_chimney(chamber);
-    // reset the current line to the top of the _l.
     current_line += (can_drop) ? 1 : 2;
 
     return can_drop;
@@ -317,7 +305,6 @@ int add_tower(Chamber& chamber)
             col.insert(col.end(), { ' ', ' ', ' ', ' ' });
         index++;
     }
-    // dsw_aoc_day17::draw_chimney(chamber);
     return chamber[0].size() - 1;
 }
 
@@ -326,7 +313,7 @@ int add_tower(Chamber& chamber)
 /// @param jet
 /// @param current_line
 /// @return the row that the top of the cross is on
-bool drop_tower(Chamber& chamber, char jet, int& current_line)
+bool drop_tower(Chamber& chamber, char jet, int_fast64_t& current_line)
 {
     current_line -= 3; // we want the base, not the top.
 
@@ -364,10 +351,8 @@ bool drop_tower(Chamber& chamber, char jet, int& current_line)
 
     bool can_drop { check_drop(chamber, current_line) };
 
-    drop_item(chamber, can_drop, current_line);
+    drop_item(chamber, can_drop, current_line, 4);
 
-    // dsw_aoc_day17::draw_chimney(chamber);
-    // reset the current line to the top of the cross.
     current_line += (can_drop) ? 2 : 3;
 
     return can_drop;
@@ -386,7 +371,7 @@ int add_square(Chamber& chamber)
             col.insert(col.end(), { ' ', ' ' });
         index++;
     }
-    // dsw_aoc_day17::draw_chimney(chamber);
+
     return chamber[0].size() - 1;
 }
 
@@ -395,7 +380,7 @@ int add_square(Chamber& chamber)
 /// @param jet
 /// @param current_line
 /// @return the row that the top of the cross is on
-bool drop_square(Chamber& chamber, char jet, int& current_line)
+bool drop_square(Chamber& chamber, char jet, int_fast64_t& current_line)
 {
     current_line -= 1; // we want the base, not the top.
 
@@ -431,25 +416,22 @@ bool drop_square(Chamber& chamber, char jet, int& current_line)
 
     bool can_drop { check_drop(chamber, current_line) };
 
-    drop_item(chamber, can_drop, current_line);
+    drop_item(chamber, can_drop, current_line, 2);
 
-    // dsw_aoc_day17::draw_chimney(chamber);
-    // reset the current line to the top of the cross.
     current_line += (can_drop) ? 0 : 1;
 
     return can_drop;
 }
 
-int rock_fall_height(Chamber& chamber, int rocks_required, int rock, const std::string& jets, int& jet_index, RepeatRow& first_repeat)
+int rock_fall_height(Chamber& chamber, int_fast64_t rocks_required, int rock, const std::string& jets, int& jet_index, RepeatRow& first_repeat)
 {
-    int rocks_fallen { 0 };
+    int_fast64_t rocks_fallen { 0 };
     bool repeat_found { false };
     bool rock_can_fall { false };
-    int chamber_row { 0 };
-    int jets_fired { 0 };
-    
+    int_fast64_t chamber_row { 0 };
+    int_fast64_t jets_fired { 0 };
 
-    std::map<int, RepeatRow> repeated_rows;
+    std::map<int_fast64_t, RepeatRow> repeated_rows;
 
     while (rocks_fallen < rocks_required && !repeat_found) {
         if (!rock_can_fall) {
@@ -475,10 +457,11 @@ int rock_fall_height(Chamber& chamber, int rocks_required, int rock, const std::
             rock_can_fall = true;
         }
         while (rock_can_fall) {
-            char jet {jets[jet_index++]};
-            if(jet_index > jets.length() -1)
+            char jet { jets[jet_index++] };
+            if (jet_index > jets.length() - 1)
                 jet_index = 0;
             jets_fired++;
+
             if (rock_can_fall) {
                 switch (rock) {
                 case 0:
@@ -504,30 +487,44 @@ int rock_fall_height(Chamber& chamber, int rocks_required, int rock, const std::
                     clear_top(chamber);
                     if (!rock) {
                         if (chamber_row == chamber[0].size() - 1) { // we have a repeat
-                            RepeatRow row_status { chamber_row, rocks_fallen, rocks_fallen, "" };
-                            for (auto col : chamber)
-                                row_status.contents.push_back(col.back());
-                            std::pair<std::map<int, RepeatRow>::iterator, bool> exists;
+                            RepeatRow row_status { chamber_row, rocks_fallen, rocks_fallen };
+                            int max_depth { 0 };
+                            for (auto col : chamber) {
+                                int depth { 1 };
+                                for (auto it { col.crbegin() }; *it == ' '; ++it, ++depth)
+                                    max_depth = (depth > max_depth) ? depth : max_depth;
+                            }
+                            int top_row_col { 0 };
+                            for (auto col : chamber) {
+                                for (auto it = col.end() - max_depth - 1; it != col.end(); ++it)
+                                    row_status.chamber[top_row_col].push_back(*it);
+                                ++top_row_col;
+                            }
 
-                            exists = repeated_rows.insert(std::pair<int, RepeatRow>(jets_fired % jets.size(), row_status));
-                            if (!exists.second) { // we have a match on the index, is the row the same?
-                                if (exists.first->second.contents == row_status.contents) {
+                            std::pair<std::map<int_fast64_t, RepeatRow>::iterator, bool> exists;
+
+                            exists = repeated_rows.insert(std::pair<int_fast64_t, RepeatRow>(jets_fired % static_cast<int_fast64_t>(jets.size()), row_status));
+                            if (!exists.second) { // we have a match on the index, is the chamber section the same?
+                                if (exists.first->second.chamber[0].size() == row_status.chamber[0].size()) { // same size, check contents
+                                    for (int index { 0 }; index < 7; ++index) // if contents don't match keep trying
+                                        if (exists.first->second.chamber[index] != row_status.chamber[index])
+                                            continue;
                                     first_repeat = exists.first->second;
                                     first_repeat.total_rocks_fallen = rocks_fallen;
                                     repeat_found = true;
+
                                     break;
                                 };
                             }
                         }
                     }
-
                     rock = ++rock % 5;
                 }
             }
         }
     }
     clear_top(chamber);
-    // dsw_aoc_day17::draw_chimney(chamber);
+
     return static_cast<int>(chamber[0].size());
 }
 
@@ -543,7 +540,7 @@ int main(int, char**)
     auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
         end_time - time_start);
 
-    std::string jets{};
+    std::string jets {};
 
     if (!data) {
         std::cerr << FILE << " could not be opened for reading\n ";
@@ -554,68 +551,61 @@ int main(int, char**)
         std::getline(data, jets);
     }
 
-    int jet_index{0};
+    int_fast64_t rock_to_fall[] { 2022, 1000000000000 };
+    int_fast64_t solution[] {0, 0};
 
-    Chamber chamber {
-        { '-' },
-        { '-' },
-        { '-' },
-        { '-' },
-        { '-' },
-        { '-' },
-        { '-' }
+    for (int part { 0 }; part < 2; ++part) {
 
-    };
+        Chamber chamber {
+            { '-' },
+            { '-' },
+            { '-' },
+            { '-' },
+            { '-' },
+            { '-' },
+            { '-' }
 
-    // dont slow it down by constant resizing of the vectors (probably overkill)
-    for (auto col : chamber)
-        col.reserve(20000);
+        };
 
-    int rocks_fallen { 0 };
-    bool rock_can_fall = false;
-    int rock { 0 };
-    int chamber_row { 0 };
-    int rocks_required { 2022 };
-    int jets_fired(0);
-    int repeat_length { 0 };
-    int discarded_length { 0 };
-    RepeatRow first_repeat {};
-    bool repeat_found { false };
-    std::map<int, RepeatRow> line_at_rest;
- 
-    int chamber_height { rock_fall_height(chamber, rocks_required, rock, jets, jet_index, first_repeat) };
-    clear_top(chamber);
-    // std::cout << '\n';
-    // dsw_aoc_day17::draw_chimney(chamber);
-    // std::cout << "next rock " << rock << '\n';
-    int_fast64_t chamber_height_at_repeat_start { first_repeat.chamber_height };
-    int_fast64_t repeated_height { chamber_height - chamber_height_at_repeat_start - 1 };
-    int_fast64_t rocks_fallen_at_repeat_start { first_repeat.repeat_rocks_fallen };
-    int_fast64_t rocks_fallen_in_repeat { first_repeat.total_rocks_fallen - rocks_fallen_at_repeat_start };
-    int_fast64_t repeat_count { (rocks_required - rocks_fallen_at_repeat_start) / rocks_fallen_in_repeat };
-    int_fast64_t rocks_left_to_fall { (rocks_required - rocks_fallen_at_repeat_start) % rocks_fallen_in_repeat };
-    int_fast64_t chamber_height_at_end_of_repeat_sequence { chamber_height_at_repeat_start + repeated_height * repeat_count };
-    // discard all but the top 10 rows of the chamber; we don't want a rock not falling far enough!
-    for (auto& col : chamber)
-        col.erase(col.begin(), col.end()- 60);
-    
-    Chamber part1_finish_chamber = chamber;
-    Chamber part2_finish_chamber = chamber;
-    int part_1_end_jet_index = jet_index;
-    int part_2_end_jet_index = jet_index;
+        // dont slow it down by constant resizing of the vectors (probably overkill)
+        for (auto col : chamber)
+            col.reserve(20000);
 
-    // solution to part 1
-    int_fast64_t remaining_height { rock_fall_height(part1_finish_chamber, rocks_left_to_fall, rock + 1, jets, part_1_end_jet_index, first_repeat) - 60};
-    std::cout << "Part 1; Height of the tower of rocks is " << chamber_height_at_end_of_repeat_sequence + remaining_height << " units tall.\n";
+        int jet_index { 0 };
+        int rocks_fallen { 0 };
+        bool rock_can_fall = false;
+        int rock { 0 };
+        int chamber_row { 0 };
+        int_fast64_t rocks_required { rock_to_fall[part] };
+        int jets_fired(0);
+        int repeat_length { 0 };
+        int discarded_length { 0 };
+        RepeatRow first_repeat {};
+        bool repeat_found { false };
+        std::map<int, RepeatRow> line_at_rest;
 
-    // solution to part 2
-    int_fast32_t part2_rocks_required{1000000000000};
-    repeat_count = (part2_rocks_required - rocks_fallen_at_repeat_start) / rocks_fallen_in_repeat;
-    chamber_height_at_end_of_repeat_sequence = chamber_height_at_repeat_start + repeated_height * repeat_count;
-    rocks_left_to_fall  = (part2_rocks_required - rocks_fallen_at_repeat_start) % rocks_fallen_in_repeat;
-    remaining_height  = rock_fall_height(part1_finish_chamber, rocks_left_to_fall, rock + 1, jets, part_2_end_jet_index, first_repeat) - 60;
-    std::cout << "Part 2; Height of the tower of rocks is " << chamber_height_at_end_of_repeat_sequence + remaining_height << " units tall.\n";
+        int chamber_height { rock_fall_height(chamber, rocks_required, rock, jets, jet_index, first_repeat) };
+        clear_top(chamber);
+        int_fast64_t finish_chamber_start_height { static_cast<int>(first_repeat.chamber[0].size()) };
 
+        if (first_repeat.chamber_height) {
+            int_fast64_t chamber_height_at_repeat_start { first_repeat.chamber_height };
+            int_fast64_t repeated_height { chamber_height - chamber_height_at_repeat_start - 1 };
+            int_fast64_t rocks_fallen_at_repeat_start { first_repeat.repeat_rocks_fallen };
+            int_fast64_t rocks_fallen_in_repeat { first_repeat.total_rocks_fallen - rocks_fallen_at_repeat_start };
+            int_fast64_t repeat_count { (rocks_required - rocks_fallen_at_repeat_start) / rocks_fallen_in_repeat };
+            int_fast64_t rocks_left_to_fall { (rocks_required - rocks_fallen_at_repeat_start) % rocks_fallen_in_repeat };
+            int_fast64_t chamber_height_at_end_of_repeat_sequence { chamber_height_at_repeat_start + repeated_height * repeat_count };
+            int_fast64_t remaining_height { rock_fall_height(first_repeat.chamber, rocks_left_to_fall, rock + 1, jets, jet_index, first_repeat) - finish_chamber_start_height };
+            solution[part] = chamber_height_at_end_of_repeat_sequence + remaining_height;
+        } else
+            solution[part] = chamber_height - 1;
+
+        std::cout << '\n';
+    }
+
+    std::cout << "Part 1; Height of the tower of rocks is " << solution[0] << " units tall.\n";
+    std::cout << "Part 2; Height of the tower of rocks is " << solution[1] << " units tall.\n";
     std::cout << "Time taken by program: " << duration.count() << " microseconds"
               << "\n";
     return 0;
