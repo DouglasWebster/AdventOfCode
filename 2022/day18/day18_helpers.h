@@ -9,6 +9,8 @@
 
 namespace dsw_aoc_day18 {
 
+  void print_matches(std::string faces);
+
 }
 
 #endif // DSW_AOC_DAY17_HELPERS_H
