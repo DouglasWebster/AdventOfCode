@@ -21,48 +21,9 @@ using BlockAxis = std::vector<int>;
 using Blocks = std::vector<BlockAxis>;
 using Point = std::pair<int, int>;
 
-/// @brief Cantor pairing function to generate a hash of two integers
-/// @param a first integer of the pair
-/// @param b second integer of the pair
-/// @return the hash of the two integers;
-inline int cantor_pairing(int a, int b)
-{
-    return ((a + b) * (a + b + 1)) / 2 + b;
-}
+int get_blocks_area (Blocks & blocks) {
 
-/// @brief
-/// @param
-/// @param
-/// @return
-int main(int, char**)
-{
-    auto time_start = std::chrono::high_resolution_clock::now();
-    std::ifstream data { FILE };
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
-        end_time - time_start);
-
-    if (!data) {
-        std::cerr << FILE << " could not be opened for reading\n ";
-        return 1;
-    }
-
-    Blocks blocks(3);
-
-    while (data && !data.eof()) {
-        std::string ordinates {};
-        std::getline(data, ordinates);
-        std::smatch m;
-        std::regex e("\\d+");
-        int index { 0 };
-        while (std::regex_search(ordinates, m, e)) {
-            for (auto x : m)
-                blocks[index].push_back(std::stoi(x));
-            ordinates = m.suffix().str();
-            ++index;
-        }
-    }
-
+    int total_face_count{static_cast<int>(blocks[0].size()) * 6};
     int common_face_count { 0 };
 
     // check x & y axis for co-planer blocks
@@ -110,7 +71,47 @@ int main(int, char**)
         }
     }
 
-    std::cout << "Total number of faces by counting: " << static_cast<int>(blocks[0].size()) * 6 - common_face_count << '\n';
+    return total_face_count - common_face_count;
+}
+
+/// @brief
+/// @param
+/// @param
+/// @return
+int main(int, char**)
+{
+    auto time_start = std::chrono::high_resolution_clock::now();
+    std::ifstream data { FILE };
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+        end_time - time_start);
+
+    if (!data) {
+        std::cerr << FILE << " could not be opened for reading\n ";
+        return 1;
+    }
+
+    Blocks blocks(3);
+
+    while (data && !data.eof()) {
+        std::string ordinates {};
+        std::getline(data, ordinates);
+        std::smatch m;
+        std::regex e("\\d+");
+        int index { 0 };
+        while (std::regex_search(ordinates, m, e)) {
+            for (auto x : m)
+                blocks[index].push_back(std::stoi(x));
+            ordinates = m.suffix().str();
+            ++index;
+        }
+    }
+
+    // Part 1
+    int part1_area{get_blocks_area(blocks)};
+
+    
+    std::cout << "Total number of faces by counting: " << part1_area << '\n';
 
     std::cout << "Time taken by program: " << duration.count() << " microseconds"
               << "\n";
