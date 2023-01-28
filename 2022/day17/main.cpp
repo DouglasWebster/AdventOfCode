@@ -536,9 +536,6 @@ int main(int, char**)
 {
     auto time_start = std::chrono::high_resolution_clock::now();
     std::ifstream data { FILE };
-    auto end_time = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
-        end_time - time_start);
 
     std::string jets {};
 
@@ -606,6 +603,11 @@ int main(int, char**)
 
     std::cout << "Part 1; Height of the tower of rocks is " << solution[0] << " units tall.\n";
     std::cout << "Part 2; Height of the tower of rocks is " << solution[1] << " units tall.\n";
+
+
+    auto end_time = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::microseconds>(
+        end_time - time_start);
     std::cout << "Time taken by program: " << duration.count() << " microseconds"
               << "\n";
     return 0;
