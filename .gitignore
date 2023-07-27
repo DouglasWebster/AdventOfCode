@@ -1,7 +1,6 @@
 **/.vscode
 aoc-env
 build/
-CMakeLists.txt
 **/input.txt
 **/test.txt
 2022/day16/figs/johnson-eg.dot

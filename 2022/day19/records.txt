@@ -1,0 +1,230 @@
+With blueprint 1
+
+	== Minute 1==
+		1 ore robot and 1 ore
+
+	== Minute 2==
+		1 ore robot and 2 ore
+
+	== Minute 3==
+		1 ore robot and 1 ore
+		1 clay robot and 0 clay
+
+	== Minute 4==
+		1 ore robot and 2 ore
+		1 clay robot and 1 clay
+
+	== Minute 5==
+		1 ore robot and 1 ore
+		2 clay robot and 2 clay
+
+	== Minute 6==
+		1 ore robot and 2 ore
+		2 clay robot and 4 clay
+
+	== Minute 7==
+		1 ore robot and 1 ore
+		3 clay robot and 6 clay
+
+	== Minute 8==
+		1 ore robot and 2 ore
+		3 clay robot and 9 clay
+
+	== Minute 9==
+		1 ore robot and 1 ore
+		4 clay robot and 12 clay
+
+	== Minute 10==
+		1 ore robot and 2 ore
+		4 clay robot and 16 clay
+
+	== Minute 11==
+		1 ore robot and 3 ore
+		4 clay robot and 20 clay
+
+	== Minute 12==
+		1 ore robot and 1 ore
+		4 clay robot and 10 clay
+		1 obsidian robot and 0 obsidian
+
+	== Minute 13==
+		1 ore robot and 2 ore
+		4 clay robot and 14 clay
+		1 obsidian robot and 1 obsidian
+
+	== Minute 14==
+		1 ore robot and 3 ore
+		4 clay robot and 18 clay
+		1 obsidian robot and 2 obsidian
+
+	== Minute 15==
+		1 ore robot and 1 ore
+		4 clay robot and 8 clay
+		2 obsidian robot and 3 obsidian
+
+	== Minute 16==
+		1 ore robot and 2 ore
+		4 clay robot and 12 clay
+		2 obsidian robot and 5 obsidian
+
+	== Minute 17==
+		1 ore robot and 3 ore
+		4 clay robot and 16 clay
+		2 obsidian robot and 7 obsidian
+
+	== Minute 18==
+		1 ore robot and 2 ore
+		4 clay robot and 20 clay
+		2 obsidian robot and 2 obsidian
+		1 geode robot and 0 geode
+
+	== Minute 19==
+		1 ore robot and 3 ore
+		4 clay robot and 24 clay
+		2 obsidian robot and 4 obsidian
+		1 geode robot and 1 geode
+
+	== Minute 20==
+		1 ore robot and 4 ore
+		4 clay robot and 28 clay
+		2 obsidian robot and 6 obsidian
+		1 geode robot and 2 geode
+
+	== Minute 21==
+		1 ore robot and 5 ore
+		4 clay robot and 32 clay
+		2 obsidian robot and 8 obsidian
+		1 geode robot and 3 geode
+
+	== Minute 22==
+		1 ore robot and 4 ore
+		4 clay robot and 36 clay
+		2 obsidian robot and 3 obsidian
+		2 geode robot and 4 geode
+
+	== Minute 23==
+		1 ore robot and 5 ore
+		4 clay robot and 40 clay
+		2 obsidian robot and 5 obsidian
+		2 geode robot and 6 geode
+
+	== Minute 24==
+		1 ore robot and 6 ore
+		4 clay robot and 44 clay
+		2 obsidian robot and 7 obsidian
+		2 geode robot and 8 geode
+
+	Blueprints quality level - 8
+
+With blueprint 2
+
+	== Minute 1==
+		1 ore robot and 1 ore
+
+	== Minute 2==
+		1 ore robot and 2 ore
+
+	== Minute 3==
+		1 ore robot and 3 ore
+
+	== Minute 4==
+		1 ore robot and 1 ore
+		1 clay robot and 0 clay
+
+	== Minute 5==
+		1 ore robot and 2 ore
+		1 clay robot and 1 clay
+
+	== Minute 6==
+		1 ore robot and 3 ore
+		1 clay robot and 2 clay
+
+	== Minute 7==
+		1 ore robot and 1 ore
+		2 clay robot and 3 clay
+
+	== Minute 8==
+		1 ore robot and 2 ore
+		2 clay robot and 5 clay
+
+	== Minute 9==
+		1 ore robot and 3 ore
+		2 clay robot and 7 clay
+
+	== Minute 10==
+		1 ore robot and 1 ore
+		3 clay robot and 9 clay
+
+	== Minute 11==
+		1 ore robot and 2 ore
+		3 clay robot and 12 clay
+
+	== Minute 12==
+		1 ore robot and 3 ore
+		3 clay robot and 15 clay
+
+	== Minute 13==
+		1 ore robot and 1 ore
+		3 clay robot and 10 clay
+		1 obsidian robot and 0 obsidian
+
+	== Minute 14==
+		1 ore robot and 2 ore
+		3 clay robot and 13 clay
+		1 obsidian robot and 1 obsidian
+
+	== Minute 15==
+		1 ore robot and 3 ore
+		3 clay robot and 16 clay
+		1 obsidian robot and 2 obsidian
+
+	== Minute 16==
+		1 ore robot and 1 ore
+		3 clay robot and 11 clay
+		2 obsidian robot and 3 obsidian
+
+	== Minute 17==
+		1 ore robot and 2 ore
+		3 clay robot and 14 clay
+		2 obsidian robot and 5 obsidian
+
+	== Minute 18==
+		1 ore robot and 3 ore
+		3 clay robot and 17 clay
+		2 obsidian robot and 7 obsidian
+
+	== Minute 19==
+		1 ore robot and 1 ore
+		3 clay robot and 12 clay
+		3 obsidian robot and 9 obsidian
+
+	== Minute 20==
+		1 ore robot and 2 ore
+		3 clay robot and 15 clay
+		3 obsidian robot and 12 obsidian
+
+	== Minute 21==
+		1 ore robot and 3 ore
+		3 clay robot and 18 clay
+		3 obsidian robot and 15 obsidian
+
+	== Minute 22==
+		1 ore robot and 1 ore
+		3 clay robot and 21 clay
+		3 obsidian robot and 6 obsidian
+		1 geode robot and 0 geode
+
+	== Minute 23==
+		1 ore robot and 2 ore
+		3 clay robot and 24 clay
+		3 obsidian robot and 9 obsidian
+		1 geode robot and 1 geode
+
+	== Minute 24==
+		1 ore robot and 3 ore
+		3 clay robot and 27 clay
+		3 obsidian robot and 12 obsidian
+		1 geode robot and 2 geode
+
+	Blueprints quality level - 4
+
